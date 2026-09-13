@@ -8,7 +8,9 @@ import {
   ShieldCheck, 
   Layers, 
   FileText,
-  RotateCcw
+  RotateCcw,
+  Zap,
+  Printer
 } from 'lucide-react';
 import { 
   UploadedStudyMaterial, 
@@ -17,9 +19,10 @@ import {
   WorkflowStep 
 } from '@/lib/types';
 import { SampleBundle } from '@/lib/sample-bundles';
-import { UploadStage } from '@/components/UploadStage';
+import { StudyTrayUpload } from '@/components/StudyTrayUpload';
+import { StudyDeskScene3D } from '@/components/StudyDeskScene3D';
 import { ModeSelectionStage } from '@/components/ModeSelectionStage';
-import { StructuredOutputStage } from '@/components/StructuredOutputStage';
+import { DigitalNotebookResult } from '@/components/DigitalNotebookResult';
 import { ProcessingFlowModal } from '@/components/ProcessingFlowModal';
 import { StudyDeskBackground } from '@/components/StudyDeskBackground';
 
@@ -150,22 +153,109 @@ export default function SturdyNerdyApp() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-[#5A6B7D]">
-          <span className="w-2 h-2 rounded-full bg-[#4A6B5D]" />
-          <span className="hidden sm:inline">Workspace Ready</span>
+        <div className="flex items-center gap-3 text-xs font-mono text-[#5A6B7D]">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF8F2] border border-[#EAE5D9]">
+            <span className="w-2 h-2 rounded-full bg-[#4A6B5D]" />
+            <span>Academic Synthesis Engine Ready</span>
+          </div>
+          {workflowStep !== 'upload' && (
+            <button
+              onClick={handleStartNew}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-[#EAE5D9] bg-white hover:bg-[#FAF8F4] text-[#1B2A47] font-medium transition-colors shadow-2xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Desk</span>
+            </button>
+          )}
         </div>
       </header>
 
       {/* Main Single Workflow Container */}
-      <main className="flex-1 relative z-10 p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 relative z-10 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         {workflowStep === 'upload' && (
-          <UploadStage
-            materials={materials}
-            onAddMaterials={handleAddMaterials}
-            onRemoveMaterial={handleRemoveMaterial}
-            onProceedToAnalyze={handleProceedToAnalyze}
-            onLoadBundle={handleLoadBundle}
-          />
+          <div className="space-y-8 animate-fadeIn">
+            {/* Step 1 Tracker */}
+            <div className="flex items-center justify-center gap-2 text-xs font-mono text-[#808D9F]">
+              <span className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#1B2A47] text-white font-medium shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-white" /> Step 1: Ingest Materials
+              </span>
+              <span className="text-[#DDD6C3]">───</span>
+              <span className="px-3 py-1 rounded-full bg-[#EAE5D9] text-[#5A6B7D]">
+                Step 2: Choose Mode
+              </span>
+              <span className="text-[#DDD6C3]">───</span>
+              <span className="px-3 py-1 rounded-full bg-[#EAE5D9] text-[#5A6B7D]">
+                Step 3: Digital Notebook & PDF
+              </span>
+            </div>
+
+            {/* Split Screen Hero Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Headline, Value Prop & Physical Study Tray */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFF5F1] text-[#365045] border border-[#D0DFD6] text-xs font-mono font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-[#4A6B5D]" />
+                    <span>A Calm Digital Study Workspace</span>
+                  </div>
+
+                  <h1 className="font-heading font-bold text-3xl sm:text-5xl text-[#121C30] tracking-tight leading-[1.12]">
+                    Turn lecture chaos <br className="hidden sm:inline" />
+                    into study clarity.
+                  </h1>
+
+                  <p className="text-sm sm:text-base text-[#47586E] font-serif leading-relaxed max-w-xl">
+                    Drop messy lecture slides, dense textbooks, and lab notes into your study tray. 
+                    SturdyNerdy transforms disordered materials into structured revision notes, formula indexes, 
+                    and exam-ready summaries.
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px] text-[#5A6B7D]">
+                    <span className="px-2.5 py-1 rounded-md bg-[#FAF8F2] border border-[#EAE5D9]">
+                      ✓ No Chatbots
+                    </span>
+                    <span className="px-2.5 py-1 rounded-md bg-[#FAF8F2] border border-[#EAE5D9]">
+                      ✓ Strict Single-Flow
+                    </span>
+                    <span className="px-2.5 py-1 rounded-md bg-[#FAF8F2] border border-[#EAE5D9]">
+                      ✓ KaTeX Math Ready
+                    </span>
+                    <span className="px-2.5 py-1 rounded-md bg-[#FAF8F2] border border-[#EAE5D9]">
+                      ✓ 100% Exportable PDF
+                    </span>
+                  </div>
+                </div>
+
+                {/* Physical Study Tray Upload Component */}
+                <div className="pt-2">
+                  <StudyTrayUpload
+                    materials={materials}
+                    onAddMaterials={handleAddMaterials}
+                    onRemoveMaterial={handleRemoveMaterial}
+                    onProceedToAnalyze={handleProceedToAnalyze}
+                    onLoadBundle={handleLoadBundle}
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Interactive 3D Study Desk Scene */}
+              <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+                <div className="bg-white/80 backdrop-blur-xs rounded-3xl border border-[#EAE5D9] p-2 shadow-desk">
+                  <StudyDeskScene3D />
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF8F2] border border-[#EAE5D9] text-xs font-mono text-[#5A6B7D] space-y-1.5">
+                  <div className="font-bold text-[#1B2A47] flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1B2A47]" />
+                    Interactive Physical Desk Scene
+                  </div>
+                  <p className="text-[11px] text-[#808D9F] leading-relaxed">
+                    Move your cursor over the desk to tilt the angle with 3D parallax. Watch disordered document cards orbit, converge, and fold into structured revision notes every 9 seconds.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {workflowStep === 'analyzed' && (
@@ -180,7 +270,7 @@ export default function SturdyNerdyApp() {
         )}
 
         {workflowStep === 'output' && structuredOutput && (
-          <StructuredOutputStage
+          <DigitalNotebookResult
             output={structuredOutput}
             onSwitchMode={handleSwitchMode}
             onStartNew={handleStartNew}
@@ -190,8 +280,11 @@ export default function SturdyNerdyApp() {
       </main>
 
       {/* Footer (Non-Printable) */}
-      <footer className="relative z-10 border-t border-[#EAE5D9] bg-[#FAF8F2]/60 py-4 px-6 text-center text-xs font-mono text-[#808D9F] print:hidden">
-        SturdyNerdy — From lecture chaos to study clarity. A calm study workspace for university students.
+      <footer className="relative z-10 border-t border-[#EAE5D9] bg-[#FAF8F2]/60 py-5 px-6 text-center text-xs font-mono text-[#808D9F] print:hidden">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>SturdyNerdy — From lecture chaos to study clarity. A calm study workspace for university students.</span>
+          <span className="text-[11px] text-[#5A6B7D]">Single Workflow Architecture · Zero Distractions</span>
+        </div>
       </footer>
 
       {/* Believable Multi-Stage Processing Flow Modal */}

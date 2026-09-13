@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,9 +8,10 @@ const inter = Inter({
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const dmSerifDisplay = DM_Serif_Display({
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
+  variable: "--font-serif-display",
   display: "swap",
 });
 
@@ -21,11 +22,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "SturdyNerdy — From lecture chaos to study clarity",
+  title: "SturdyNerdy — Turn lecture chaos into study clarity.",
   description:
-    "SturdyNerdy is a calm, modern study workspace that helps students transform cluttered study materials into clear, structured understanding.",
+    "SturdyNerdy is a calm, modern study workspace that helps university students transform cluttered lecture slides, syllabi, and notes into clear, structured understanding.",
   keywords: [
     "SturdyNerdy",
+    "digital study desk",
     "study workspace",
     "lecture notes organizer",
     "one glance summary",
@@ -35,16 +37,16 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "SturdyNerdy Team" }],
   openGraph: {
-    title: "SturdyNerdy — From lecture chaos to study clarity",
+    title: "SturdyNerdy — Turn lecture chaos into study clarity.",
     description:
-      "A calm study workspace that turns cluttered study materials into clear, structured notes.",
+      "A calm digital study desk that transforms cluttered study materials into structured notes.",
     siteName: "SturdyNerdy",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SturdyNerdy — From lecture chaos to study clarity",
+    title: "SturdyNerdy — Turn lecture chaos into study clarity.",
     description:
       "Transform cluttered lecture slides, syllabi, and notes into structured understanding.",
   },
@@ -56,8 +58,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className="font-sans min-h-screen bg-[#FBF9F4] text-[#1A232E] selection:bg-[#EAEFF7] selection:text-[#1B2A47]">
+    <html lang="en" className={`${inter.variable} ${dmSerifDisplay.variable}`}>
+      <body className="font-sans min-h-screen bg-[#FAF8F3] text-[#162130] selection:bg-[#EAEFF7] selection:text-[#1B2A47] antialiased">
         {children}
       </body>
     </html>

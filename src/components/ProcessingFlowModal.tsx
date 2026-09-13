@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { 
   Loader2, 
   Check, 
-  FileText, 
   Sparkles, 
-  Cpu, 
   BookOpen,
   Layers,
-  Compass
+  FileSpreadsheet,
+  CheckCircle2,
+  FileCheck
 } from 'lucide-react';
 import { OutputMode, UploadedStudyMaterial } from '@/lib/types';
 
@@ -20,32 +20,13 @@ interface ProcessingFlowModalProps {
   onComplete: () => void;
 }
 
-const STAGES = [
-  {
-    id: 1,
-    title: 'Reading & Parsing Study Materials',
-    description: 'Extracting clean text streams from uploaded PDF, DOCX, and PPTX files.',
-  },
-  {
-    id: 2,
-    title: 'Cross-Referencing Document Content',
-    description: 'Analyzing unified corpus, headings, and conceptual dependencies.',
-  },
-  {
-    id: 3,
-    title: 'Extracting Key Concepts & Invariant Rules',
-    description: 'Isolating formal definitions, mathematical formulas, and core takeaways.',
-  },
-  {
-    id: 4,
-    title: 'Structuring Academic Taxonomy',
-    description: 'Building structured matrix, exam pitfalls, and syllabus units.',
-  },
-  {
-    id: 5,
-    title: 'Finalizing Print-Ready Document',
-    description: 'Formatting LaTeX KaTeX equations and paginated print styles.',
-  },
+const PIPELINE_STEPS = [
+  { id: 1, label: 'Reading Documents', desc: 'Parsing text and mathematical structures from files' },
+  { id: 2, label: 'Extracting Concepts', desc: 'Isolating fundamental claims, theorems, and definitions' },
+  { id: 3, label: 'Identifying Topics', desc: 'Cross-referencing terminology across multi-source corpus' },
+  { id: 4, label: 'Building Structure', desc: 'Organizing syllabus units, comparison tables, and edge cases' },
+  { id: 5, label: 'Writing Notes', desc: 'Typesetting LaTeX equations and drafting executive takeaways' },
+  { id: 6, label: 'Finalizing Output', desc: 'Compiling publication-ready journal format & PDF pagination' },
 ];
 
 export function ProcessingFlowModal({
@@ -54,43 +35,51 @@ export function ProcessingFlowModal({
   mode,
   onComplete,
 }: ProcessingFlowModalProps) {
-  const [currentStageIdx, setCurrentStageIdx] = useState(0);
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [progress, setProgress] = useState(10);
+  const [transformStage, setTransformStage] = useState<'converge' | 'merged' | 'opened'>('converge');
 
   useEffect(() => {
     if (!isOpen) {
-      setCurrentStageIdx(0);
+      setCurrentStepIdx(0);
       setProgress(10);
+      setTransformStage('converge');
       return;
     }
 
-    const interval = setInterval(() => {
+    // Progress counter
+    const timer = setInterval(() => {
       setProgress(prev => {
         if (prev >= 98) {
-          clearInterval(interval);
+          clearInterval(timer);
           return 100;
         }
-        const next = prev + Math.floor(Math.random() * 12 + 8);
-        return Math.min(next, 98);
+        return prev + Math.floor(Math.random() * 8 + 5);
       });
-    }, 450);
+    }, 380);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    if (progress < 25) setCurrentStageIdx(0);
-    else if (progress < 50) setCurrentStageIdx(1);
-    else if (progress < 72) setCurrentStageIdx(2);
-    else if (progress < 92) setCurrentStageIdx(3);
-    else setCurrentStageIdx(4);
+    // Step index mapped to 6 steps
+    const step = Math.min(5, Math.floor((progress / 100) * 6));
+    setCurrentStepIdx(step);
+
+    if (progress < 45) {
+      setTransformStage('converge');
+    } else if (progress < 85) {
+      setTransformStage('merged');
+    } else {
+      setTransformStage('opened');
+    }
 
     if (progress >= 100) {
       const timeout = setTimeout(() => {
         onComplete();
-      }, 400);
+      }, 500);
       return () => clearTimeout(timeout);
     }
   }, [progress, isOpen, onComplete]);
@@ -98,31 +87,73 @@ export function ProcessingFlowModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#121C30]/50 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-[#FAF8F4] rounded-2xl border border-[#EAE5D9] shadow-desk-elevated max-w-lg w-full p-6 sm:p-8 space-y-6 overflow-hidden relative">
-        {/* Subtle decorative top bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1B2A47] via-[#4A6B5D] to-[#8C6D3F]" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1320]/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-[#FAF8F3] rounded-3xl border border-[#E8E2D2] shadow-desk-elevated max-w-lg w-full p-6 sm:p-8 space-y-6 overflow-hidden relative">
+        {/* Leather Notebook Binding Accent */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1B2A47] via-[#4A6B5D] to-[#C5A059]" />
 
-        {/* Header */}
-        <div className="text-center space-y-1.5 pt-2">
-          <div className="w-12 h-12 rounded-full bg-white border border-[#EAE5D9] flex items-center justify-center text-[#1B2A47] mx-auto shadow-2xs">
-            <Sparkles className="w-5 h-5 text-[#4A6B5D] animate-pulse" />
-          </div>
-          <h3 className="font-heading font-bold text-xl text-[#121C30]">
-            Synthesizing {mode === 'one_glance_summary' ? 'One-Glance Summary' : 'Revision Notes'}
+        {/* Cinematic Notes Generation Visual Transformation */}
+        <div className="relative h-28 rounded-2xl bg-[#F5F1E6] border border-[#E8E2D2] flex items-center justify-center overflow-hidden">
+          {/* Subtle notebook ruled background inside stage */}
+          <div className="absolute inset-0 notebook-ruled opacity-20" />
+
+          {transformStage === 'converge' && (
+            <div className="flex items-center gap-3 animate-fadeIn">
+              <div className="w-10 h-12 rounded-md bg-white border border-[#E8E2D2] shadow-desk flex items-center justify-center font-mono text-[9px] font-bold text-[#1B2A47] transform -rotate-6 animate-pulse">
+                PDF
+              </div>
+              <div className="w-10 h-12 rounded-md bg-white border border-[#CFDDD5] shadow-desk flex items-center justify-center font-mono text-[9px] font-bold text-[#4A6B5D] transform translate-y-1">
+                DOC
+              </div>
+              <div className="w-10 h-12 rounded-md bg-white border border-[#E9D8B4] shadow-desk flex items-center justify-center font-mono text-[9px] font-bold text-[#8C6D3F] transform rotate-6 animate-pulse">
+                PPT
+              </div>
+            </div>
+          )}
+
+          {transformStage === 'merged' && (
+            <div className="flex flex-col items-center space-y-1 animate-fadeIn">
+              <div className="w-14 h-16 rounded-md bg-[#1B2A47] border border-[#C5A059] shadow-journal flex items-center justify-center text-[#C5A059] transform scale-105">
+                <BookOpen className="w-6 h-6 animate-pulse" />
+              </div>
+              <span className="font-serif text-[10px] text-[#1B2A47] font-bold">
+                Synthesizing Unified Journal...
+              </span>
+            </div>
+          )}
+
+          {transformStage === 'opened' && (
+            <div className="flex items-center gap-1.5 bg-white p-2.5 rounded-xl border border-[#C5A059] shadow-desk animate-fadeIn">
+              <Sparkles className="w-4 h-4 text-[#C5A059]" />
+              <div className="text-left">
+                <div className="font-serif font-bold text-xs text-[#121C2B]">
+                  {mode === 'one_glance_summary' ? 'One-Glance Exam Sheet' : 'Comprehensive Revision Notes'}
+                </div>
+                <div className="text-[9px] font-mono text-[#4A6B5D]">
+                  Structured & Ready to Study
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Header Title */}
+        <div className="text-center space-y-1">
+          <h3 className="font-serif font-bold text-xl text-[#121C2B]">
+            SturdyNerdy Study Desk
           </h3>
-          <p className="text-xs font-mono text-[#5A6B7D]">
-            Processing {materials.length} uploaded files ({materials.map(m => m.name).join(', ')})
+          <p className="text-xs font-mono text-[#60728B]">
+            Synthesizing {materials.length} uploaded files into structured notes
           </p>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[#808D9F]">
-            <span>Cognitive Synthesis Progress</span>
+          <div className="flex items-center justify-between text-[11px] font-mono text-[#60728B]">
+            <span>Synthesis Pipeline</span>
             <span className="font-bold text-[#1B2A47]">{progress}%</span>
           </div>
-          <div className="w-full bg-[#EAE5D9] h-2 rounded-full overflow-hidden p-0.5">
+          <div className="w-full bg-[#E8E2D2] h-2 rounded-full overflow-hidden p-0.5">
             <div
               style={{ width: `${progress}%` }}
               className="bg-gradient-to-r from-[#1B2A47] to-[#4A6B5D] h-full rounded-full transition-all duration-300 ease-out"
@@ -130,56 +161,52 @@ export function ProcessingFlowModal({
           </div>
         </div>
 
-        {/* Stages Checklist */}
-        <div className="space-y-3 bg-white p-4 rounded-xl border border-[#EAE5D9] shadow-2xs">
-          {STAGES.map((stage, idx) => {
-            const isCompleted = idx < currentStageIdx || progress >= 100;
-            const isCurrent = idx === currentStageIdx && progress < 100;
+        {/* The 6-Step Pipeline */}
+        <div className="space-y-2.5 bg-white p-4 rounded-2xl border border-[#E8E2D2] shadow-desk">
+          {PIPELINE_STEPS.map((step, idx) => {
+            const isDone = idx < currentStepIdx || progress >= 100;
+            const isCurrent = idx === currentStepIdx && progress < 100;
 
             return (
               <div
-                key={stage.id}
+                key={step.id}
                 className={`flex items-start gap-3 transition-opacity duration-300 ${
-                  idx > currentStageIdx ? 'opacity-35' : 'opacity-100'
+                  idx > currentStepIdx ? 'opacity-30' : 'opacity-100'
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-mono transition-colors ${
-                    isCompleted
+                    isDone
                       ? 'bg-[#4A6B5D] text-white'
                       : isCurrent
                       ? 'bg-[#1B2A47] text-white'
-                      : 'bg-[#EAE5D9] text-[#808D9F]'
+                      : 'bg-[#E8E2D2] text-[#8595AB]'
                   }`}
                 >
-                  {isCompleted ? (
+                  {isDone ? (
                     <Check className="w-3 h-3" />
                   ) : isCurrent ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
-                    stage.id
+                    step.id
                   )}
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1 flex items-baseline justify-between">
                   <div
-                    className={`font-heading text-xs font-semibold ${
-                      isCurrent ? 'text-[#1B2A47]' : isCompleted ? 'text-[#121C30]' : 'text-[#808D9F]'
+                    className={`font-serif text-xs font-bold ${
+                      isCurrent ? 'text-[#1B2A47]' : isDone ? 'text-[#121C2B]' : 'text-[#8595AB]'
                     }`}
                   >
-                    {stage.title}
+                    {step.label}
                   </div>
-                  <div className="text-[11px] font-sans text-[#5A6B7D] leading-snug">
-                    {stage.description}
-                  </div>
+                  <span className="text-[10px] font-mono text-[#8595AB] truncate ml-2">
+                    {step.desc}
+                  </span>
                 </div>
               </div>
             );
           })}
-        </div>
-
-        <div className="text-center font-mono text-[10px] text-[#808D9F]">
-          Generating output strictly from your uploaded source material.
         </div>
       </div>
     </div>
