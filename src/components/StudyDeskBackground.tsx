@@ -10,119 +10,58 @@ export function StudyDeskBackground() {
     >
       {/* Delicate Notebook Grid Texture */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-[0.03]"
+        className="absolute inset-0 w-full h-full opacity-[0.025]"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
           <pattern
             id="sturdy-grid"
-            width="32"
-            height="32"
+            width="36"
+            height="36"
             patternUnits="userSpaceOnUse"
           >
             <path
-              d="M 32 0 L 0 0 0 32"
+              d="M 36 0 L 0 0 0 36"
               fill="none"
               stroke="#1B2A47"
-              strokeWidth="0.65"
+              strokeWidth="0.5"
             />
-            <circle cx="0" cy="0" r="0.8" fill="#1B2A47" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#sturdy-grid)" />
       </svg>
 
-      {/* Watermarked Study Desk Motif 1: Open Notebook (Top-Right) */}
-      <div className="absolute top-[6%] right-[5%] w-64 h-48 text-[#1B2A47] animate-breathe-slow will-change-transform">
-        <svg viewBox="0 0 200 150" fill="none" stroke="currentColor" strokeWidth="1">
-          {/* Left page */}
-          <path d="M 20 20 C 60 18, 90 22, 100 28 L 100 135 C 90 128, 60 125, 20 127 Z" />
-          {/* Right page */}
-          <path d="M 180 20 C 140 18, 110 22, 100 28 L 100 135 C 110 128, 140 125, 180 127 Z" />
-          {/* Ruled lines */}
-          <line x1="32" y1="44" x2="88" y2="45" strokeDasharray="2 3" />
-          <line x1="32" y1="62" x2="88" y2="63" strokeDasharray="2 3" />
-          <line x1="32" y1="80" x2="88" y2="81" strokeDasharray="2 3" />
-          <line x1="32" y1="98" x2="88" y2="99" strokeDasharray="2 3" />
-          <line x1="112" y1="45" x2="168" y2="44" strokeDasharray="2 3" />
-          <line x1="112" y1="63" x2="168" y2="62" strokeDasharray="2 3" />
-          <line x1="112" y1="81" x2="168" y2="80" strokeDasharray="2 3" />
-          <line x1="112" y1="99" x2="168" y2="98" strokeDasharray="2 3" />
+      {/* 1. Exactly ONE Book Illustration (Faint Warm Slate) */}
+      <div className="absolute top-[14%] right-[7%] w-56 h-40 text-[#1B2A47]/40 animate-breathe-slow will-change-transform">
+        <svg viewBox="0 0 200 140" fill="none" stroke="currentColor" strokeWidth="0.9">
+          {/* Spine & Pages */}
+          <path d="M 24 28 C 64 24, 92 28, 100 34 L 100 126 C 92 120, 64 116, 24 118 Z" />
+          <path d="M 176 28 C 136 24, 108 28, 100 34 L 100 126 C 108 120, 136 116, 176 118 Z" />
+          {/* Subtle page lines */}
+          <line x1="36" y1="50" x2="88" y2="51" strokeDasharray="2 3" opacity="0.6" />
+          <line x1="36" y1="68" x2="88" y2="69" strokeDasharray="2 3" opacity="0.6" />
+          <line x1="36" y1="86" x2="88" y2="87" strokeDasharray="2 3" opacity="0.6" />
+          <line x1="112" y1="51" x2="164" y2="50" strokeDasharray="2 3" opacity="0.6" />
+          <line x1="112" y1="69" x2="164" y2="68" strokeDasharray="2 3" opacity="0.6" />
+          <line x1="112" y1="87" x2="164" y2="86" strokeDasharray="2 3" opacity="0.6" />
         </svg>
       </div>
 
-      {/* Watermarked Study Desk Motif 2: Drafting Compass & Geometry Arc (Bottom-Left) */}
-      <div className="absolute bottom-[8%] left-[4%] w-56 h-56 text-[#4A6B5D] animate-breathe-offset will-change-transform">
-        <svg viewBox="0 0 160 160" fill="none" stroke="currentColor" strokeWidth="1">
-          <line x1="80" y1="20" x2="35" y2="135" />
-          <line x1="80" y1="20" x2="125" y2="135" />
-          <circle cx="80" cy="20" r="6" />
-          <circle cx="80" cy="20" r="2.5" fill="currentColor" />
-          <path d="M 45 110 A 55 55 0 0 1 115 110" strokeDasharray="2 2" />
+      {/* 2. Exactly ONE Geometric Sketch (Drafting Circle & Tangent, Faint Sage) */}
+      <div className="absolute bottom-[16%] left-[6%] w-48 h-48 text-[#4A6B5D]/40 animate-breathe-offset will-change-transform">
+        <svg viewBox="0 0 160 160" fill="none" stroke="currentColor" strokeWidth="0.85">
+          <circle cx="80" cy="80" r="55" strokeDasharray="3 3" />
+          <circle cx="80" cy="80" r="2" fill="currentColor" />
+          <line x1="20" y1="135" x2="140" y2="25" />
+          <circle cx="120" cy="45" r="4" />
         </svg>
       </div>
 
-      {/* Watermarked Study Desk Motif 3: Mathematical Integrals & Sigma (Mid-Left) */}
-      <div className="absolute top-[35%] left-[3%] w-44 h-40 text-[#1B2A47] animate-breathe-slow will-change-transform">
-        <svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="0.8">
-          <rect x="20" y="10" width="70" height="85" rx="2" strokeDasharray="3 3" />
-          <text
-            x="32"
-            y="55"
-            fontSize="26"
-            fontFamily="serif"
-            fill="currentColor"
-            stroke="none"
-          >
-            ∫
-          </text>
-          <text
-            x="50"
-            y="50"
-            fontSize="12"
-            fontFamily="serif"
-            fill="currentColor"
-            stroke="none"
-          >
-            f(x) dx
-          </text>
-          <text
-            x="35"
-            y="80"
-            fontSize="18"
-            fontFamily="serif"
-            fill="currentColor"
-            stroke="none"
-          >
-            ∑ a_n
-          </text>
-        </svg>
-      </div>
-
-      {/* Watermarked Study Desk Motif 4: Drafting Scale Ruler (Bottom-Right) */}
-      <div className="absolute bottom-[6%] right-[6%] w-64 h-24 text-[#8C6D3F] animate-breathe-offset will-change-transform">
-        <svg viewBox="0 0 180 60" fill="none" stroke="currentColor" strokeWidth="1">
-          <rect x="5" y="25" width="170" height="24" rx="2" />
-          {[15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165].map((x, i) => (
-            <line
-              key={x}
-              x1={x}
-              y1={25}
-              x2={x}
-              y2={i % 2 === 0 ? 38 : 32}
-            />
-          ))}
-          <text
-            x="145"
-            y="18"
-            fontSize="18"
-            fontFamily="serif"
-            fill="currentColor"
-            stroke="none"
-          >
-            Δ
-          </text>
-        </svg>
+      {/* 3. Exactly ONE Notebook Element (Vertical Margin Line & Binder Perforations) */}
+      <div className="absolute top-0 bottom-0 left-8 sm:left-12 w-px bg-[#E2DACB]/70 will-change-transform">
+        <div className="absolute top-[20%] -left-1.5 w-3 h-3 rounded-full border border-[#D5CABB] bg-[#FBF9F4]" />
+        <div className="absolute top-[50%] -left-1.5 w-3 h-3 rounded-full border border-[#D5CABB] bg-[#FBF9F4]" />
+        <div className="absolute top-[80%] -left-1.5 w-3 h-3 rounded-full border border-[#D5CABB] bg-[#FBF9F4]" />
       </div>
     </div>
   );
