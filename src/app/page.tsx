@@ -28,9 +28,10 @@ import {
 import { StudyDeskBackground } from '@/components/StudyDeskBackground';
 import { StudyDeskScene3D } from '@/components/StudyDeskScene3D';
 import { HowItWorksTimeline } from '@/components/HowItWorksTimeline';
-import { DocumentMergeShowcase } from '@/components/DocumentMergeShowcase';
 import { StudyTrayUpload } from '@/components/StudyTrayUpload';
+import { DocumentMergeShowcase } from '@/components/DocumentMergeShowcase';
 import { NotebookPreviewShowcase } from '@/components/NotebookPreviewShowcase';
+
 import { DigitalNotebookResult } from '@/components/DigitalNotebookResult';
 import { ProcessingFlowModal } from '@/components/ProcessingFlowModal';
 

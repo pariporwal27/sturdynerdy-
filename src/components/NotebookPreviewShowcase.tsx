@@ -17,17 +17,16 @@ export function NotebookPreviewShowcase() {
   const [activeTab, setActiveTab] = useState<'summary' | 'derivations' | 'formulas' | 'traps'>('summary');
 
   return (
-    <section className="relative py-28 lg:py-36 max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="relative py-20 lg:py-28 max-w-6xl mx-auto px-4 sm:px-6">
       {/* Section Header */}
-      <div className="text-center space-y-4 mb-16">
+      <div className="text-center space-y-2 mb-12">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF8F2] border border-[#EAE5D9] text-xs font-mono text-[#5A6B7D] uppercase tracking-wider">
           <BookOpen className="w-3.5 h-3.5 text-[#1B2A47]" />
           <span>Section 05 · The Final Artifact</span>
         </div>
 
         <h2 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-[#121C30] tracking-tight leading-[1.08]">
-          Crafted like a luxury <br />
-          academic journal.
+          Academic Journal Style
         </h2>
 
         <p className="text-lg sm:text-xl text-[#5A6B7D] font-serif leading-relaxed max-w-2xl mx-auto">
