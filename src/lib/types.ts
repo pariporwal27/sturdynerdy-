@@ -8,85 +8,85 @@ export interface UploadedStudyMaterial {
   content: string;
   status: 'ready' | 'processing' | 'error';
   wordCount: number;
-  pageCount?: number;
+  pageCount: number;
+  charCount: number;
   errorMessage?: string;
-  isSample?: boolean;
 }
 
-export interface AnalysisOverview {
-  totalMaterials: number;
-  totalWords: number;
-  estimatedReadingTimeMinutes: number;
-  identifiedSubject: string;
-  academicLevel: string;
-  coreThemes: string[];
-  detectedFormulasCount: number;
+export interface ExtractionStats {
+  filesUploaded: number;
+  pagesProcessed: number;
+  charactersExtracted: number;
+  wordsExtracted: number;
 }
 
-export type OutputMode = 'one_glance_summary' | 'revision_notes';
+export type OutputMode = 'quick_summary' | 'revision_notes';
 
-export interface OneGlanceSummary {
-  title: string;
-  executiveThesis: string;
-  highYieldTakeaways: string[];
-  coreFormulasAndDefinitions: {
-    termOrLaw: string;
-    formulaOrRule: string;
-    context: string;
-  }[];
-  quickComparisonTable: {
-    title: string;
-    headers: string[];
-    rows: string[][];
-  };
-  criticalExamPitfalls: string[];
-  fiveMinuteReviewChecklist: string[];
-}
-
-export interface RevisionUnit {
-  unitNumber: number;
-  unitTitle: string;
-  formalDefinitions: {
+export interface QuickSummaryOutput {
+  mainTopic: string;
+  summary: string;
+  coreConcepts: string[];
+  keyTakeaways: string[];
+  importantDefinitions: {
     term: string;
     definition: string;
-    latexFormula?: string;
   }[];
-  inDepthExplanation: string;
-  stepByStepDerivations?: {
-    title: string;
-    steps: string[];
-    conclusion: string;
-    latex?: string;
+  importantFormulas?: {
+    name: string;
+    formula: string;
+    explanation?: string;
   }[];
-  commonMisconceptions: string[];
-  highYieldExamTips: string[];
 }
 
-export interface RevisionNotes {
-  title: string;
-  courseOrSubject: string;
-  overview: string;
-  units: RevisionUnit[];
-  formulaSheet: {
+export interface RevisionSubtopic {
+  subheading: string;
+  keyPoints: string[];
+  concepts?: string[];
+  definitions?: {
+    term: string;
+    definition: string;
+  }[];
+  formulas?: {
     name: string;
-    latex: string;
-    explanation: string;
-    variables: string[];
+    formula: string;
   }[];
-  memoryAidsAndMnemonics: {
-    title: string;
-    mnemonic: string;
-    description: string;
-  }[];
+}
+
+export interface RevisionSection {
+  heading: string;
+  subtopics: RevisionSubtopic[];
+  examOrientedNotes: string[];
+}
+
+export interface RevisionNotesOutput {
+  title: string;
+  subjectOrTopic: string;
+  sections: RevisionSection[];
+  quickExamTips: string[];
 }
 
 export interface StructuredOutput {
   id: string;
   mode: OutputMode;
   createdAt: string;
-  materials: { name: string; type: MaterialType; wordCount: number }[];
-  oneGlance?: OneGlanceSummary;
-  revisionNotes?: RevisionNotes;
+  materials: {
+    name: string;
+    type: MaterialType;
+    wordCount: number;
+    pageCount: number;
+    charCount: number;
+  }[];
+  stats: ExtractionStats;
+  quickSummary?: QuickSummaryOutput;
+  revisionNotes?: RevisionNotesOutput;
+  rawMarkdown?: string;
+}
+
+export interface ProcessingLog {
+  id: string;
+  timestamp: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
 }
 
 export type WorkflowStep = 'upload' | 'analyzed' | 'output';

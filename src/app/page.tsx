@@ -14,82 +14,118 @@ import {
   ArrowRight,
   ArrowDown,
   Cpu,
-  FileCheck,
+  FileCheck2,
+  FileSpreadsheet,
   Sigma
 } from 'lucide-react';
 import { 
   UploadedStudyMaterial, 
   OutputMode, 
   StructuredOutput, 
-  WorkflowStep 
+  WorkflowStep,
+  ExtractionStats
 } from '@/lib/types';
-import { SampleBundle } from '@/lib/sample-bundles';
 import { StudyDeskBackground } from '@/components/StudyDeskBackground';
 import { StudyDeskScene3D } from '@/components/StudyDeskScene3D';
 import { HowItWorksTimeline } from '@/components/HowItWorksTimeline';
 import { DocumentMergeShowcase } from '@/components/DocumentMergeShowcase';
 import { StudyTrayUpload } from '@/components/StudyTrayUpload';
 import { NotebookPreviewShowcase } from '@/components/NotebookPreviewShowcase';
-import { ModeSelectionStage } from '@/components/ModeSelectionStage';
 import { DigitalNotebookResult } from '@/components/DigitalNotebookResult';
 import { ProcessingFlowModal } from '@/components/ProcessingFlowModal';
 
 export default function SturdyNerdyApp() {
   const [workflowStep, setWorkflowStep] = useState<WorkflowStep>('upload');
   const [materials, setMaterials] = useState<UploadedStudyMaterial[]>([]);
-  const [selectedMode, setSelectedMode] = useState<OutputMode>('one_glance_summary');
+  const [stats, setStats] = useState<ExtractionStats>({
+    filesUploaded: 0,
+    pagesProcessed: 0,
+    charactersExtracted: 0,
+    wordsExtracted: 0,
+  });
+
+  const [selectedMode, setSelectedMode] = useState<OutputMode>('quick_summary');
   const [structuredOutput, setStructuredOutput] = useState<StructuredOutput | null>(null);
 
   const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
+  const [isApiDone, setIsApiDone] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [pendingOutput, setPendingOutput] = useState<StructuredOutput | null>(null);
-  const [generationNotice, setGenerationNotice] = useState<string | null>(null);
 
-  const handleAddMaterials = (newItems: UploadedStudyMaterial[]) => {
-    setMaterials(prev => [...prev, ...newItems]);
+  const handleAddMaterials = (
+    newItems: UploadedStudyMaterial[],
+    newStats: ExtractionStats
+  ) => {
+    setMaterials(newItems);
+    setStats(newStats);
   };
 
   const handleRemoveMaterial = (id: string) => {
-    setMaterials(prev => prev.filter(m => m.id !== id));
+    setMaterials((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      setStats({
+        filesUploaded: updated.length,
+        pagesProcessed: updated.reduce((s, m) => s + m.pageCount, 0),
+        charactersExtracted: updated.reduce((s, m) => s + m.charCount, 0),
+        wordsExtracted: updated.reduce((s, m) => s + m.wordCount, 0),
+      });
+      return updated;
+    });
   };
 
-  const handleLoadBundle = (bundle: SampleBundle) => {
-    setMaterials(bundle.materials);
+  const handleClearAll = () => {
+    setMaterials([]);
+    setStats({
+      filesUploaded: 0,
+      pagesProcessed: 0,
+      charactersExtracted: 0,
+      wordsExtracted: 0,
+    });
   };
 
   const handleProceedToAnalyze = () => {
     if (materials.length === 0) return;
     setWorkflowStep('analyzed');
-    // Smooth scroll to workspace
     document.getElementById('workspace')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleGenerate = async (modeToGenerate = selectedMode) => {
     if (materials.length === 0) return;
+
+    // Validate extracted text
+    const totalChars = materials.reduce((s, m) => s + (m.charCount || 0), 0);
+    if (totalChars === 0) {
+      alert('Error: Extracted text length is zero. Please upload files with readable text.');
+      return;
+    }
+
     setSelectedMode(modeToGenerate);
     setIsProcessingModalOpen(true);
-    setGenerationNotice(null);
+    setIsApiDone(false);
+    setApiError(null);
+    setPendingOutput(null);
 
     try {
       const res = await fetch('/api/study/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          materials: materials.map(m => ({
+          materials: materials.map((m) => ({
             name: m.name,
             type: m.type,
             content: m.content,
+            pageCount: m.pageCount,
+            charCount: m.charCount,
+            wordCount: m.wordCount,
           })),
           mode: modeToGenerate,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`API returned HTTP ${res.status}`);
-      }
-
       const result = await res.json();
-      if (result.notice) {
-        setGenerationNotice(result.notice);
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || `Gemini API returned error HTTP ${res.status}`);
       }
 
       const newOutput: StructuredOutput = {
@@ -100,19 +136,23 @@ export default function SturdyNerdyApp() {
           month: 'long',
           day: 'numeric',
         }),
-        materials: materials.map(m => ({
+        materials: materials.map((m) => ({
           name: m.name,
           type: m.type,
           wordCount: m.wordCount,
+          pageCount: m.pageCount,
+          charCount: m.charCount,
         })),
-        oneGlance: modeToGenerate === 'one_glance_summary' ? result.data : undefined,
+        stats,
+        quickSummary: modeToGenerate === 'quick_summary' ? result.data : undefined,
         revisionNotes: modeToGenerate === 'revision_notes' ? result.data : undefined,
       };
 
       setPendingOutput(newOutput);
+      setIsApiDone(true);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Synthesis error';
-      setGenerationNotice(`Analysis completed via local academic engine (${msg}).`);
+      const msg = err instanceof Error ? err.message : 'Error during note generation';
+      setApiError(msg);
     }
   };
 
@@ -125,6 +165,11 @@ export default function SturdyNerdyApp() {
     }
   };
 
+  const handleDismissError = () => {
+    setIsProcessingModalOpen(false);
+    setApiError(null);
+  };
+
   const handleSwitchMode = async (newMode: OutputMode) => {
     if (newMode === selectedMode && structuredOutput) return;
     await handleGenerate(newMode);
@@ -133,15 +178,20 @@ export default function SturdyNerdyApp() {
   const handleStartNew = () => {
     setWorkflowStep('upload');
     setMaterials([]);
+    setStats({
+      filesUploaded: 0,
+      pagesProcessed: 0,
+      charactersExtracted: 0,
+      wordsExtracted: 0,
+    });
     setStructuredOutput(null);
     setPendingOutput(null);
-    setGenerationNotice(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen relative flex flex-col bg-[#FAF8F3] text-[#121C2B] font-sans selection:bg-[#EAEFF7] selection:text-[#1B2A47]">
-      {/* Calm Watermarked Study Desk Background (Reduced 50% Doodles) */}
+      {/* Calm Watermarked Study Desk Background */}
       <StudyDeskBackground />
 
       {/* Top Navigation Bar (Non-Printable) */}
@@ -189,7 +239,7 @@ export default function SturdyNerdyApp() {
                 href="#workspace"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1B2A47] hover:bg-[#121C30] text-white text-xs sm:text-sm font-semibold transition-all shadow-desk hover:shadow-desk-elevated"
               >
-                <span>Open Workspace</span>
+                <span>Upload Materials</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
             </>
@@ -198,15 +248,14 @@ export default function SturdyNerdyApp() {
       </header>
 
       {/* ============================================================= */}
-      {/* IF GENERATED: SHOW FULL DIGITAL NOTEBOOK (Print & Study View)  */}
+      {/* IF GENERATED: SHOW FULL STUDENT REVISION NOTEBOOK             */}
       {/* ============================================================= */}
       {workflowStep === 'output' && structuredOutput ? (
-        <main className="flex-1 relative z-10 p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full">
+        <main className="flex-1 relative z-10 p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto w-full">
           <DigitalNotebookResult
             output={structuredOutput}
             onSwitchMode={handleSwitchMode}
             onStartNew={handleStartNew}
-            generationNotice={generationNotice}
           />
         </main>
       ) : (
@@ -215,7 +264,7 @@ export default function SturdyNerdyApp() {
         /* ============================================================= */
         <main className="flex-1 relative z-10">
           {/* ----------------------------------------------------------- */}
-          {/* SECTION 1: HERO (Full-Screen Height, Breathing, Pure)       */}
+          {/* SECTION 1: HERO                                             */}
           {/* ----------------------------------------------------------- */}
           <section className="relative min-h-[90vh] lg:min-h-[96vh] flex items-center py-16 sm:py-24 px-6 sm:px-12 max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full">
@@ -233,11 +282,10 @@ export default function SturdyNerdyApp() {
                   study clarity.
                 </h1>
 
-                {/* Hero Description: 22–28px Editorial Font */}
+                {/* Hero Description */}
                 <p className="text-xl sm:text-2xl lg:text-[25px] text-[#47586E] font-serif leading-relaxed max-w-xl">
                   Drop messy slides, dense textbook chapters, and lab notes into your digital workspace. 
-                  SturdyNerdy cross-references disparate sources into structured revision notes, formula indexes, 
-                  and exam-ready summaries.
+                  SturdyNerdy extracts the real text and generates student-friendly revision notes and quick summaries.
                 </p>
 
                 {/* Primary & Secondary CTAs */}
@@ -258,26 +306,26 @@ export default function SturdyNerdyApp() {
                   </a>
                 </div>
 
-                {/* Editorial Assurance Badges */}
+                {/* Assurance Badges */}
                 <div className="flex flex-wrap items-center gap-3 pt-4 text-xs font-mono text-[#5A6B7D]">
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#4A6B5D]" />
-                    No Chatbots
+                    Real Text Extraction
                   </span>
                   <span className="text-[#DDD6C3]">·</span>
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#4A6B5D]" />
-                    LaTeX Derivations
+                    Zero Placeholder Content
                   </span>
                   <span className="text-[#DDD6C3]">·</span>
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#4A6B5D]" />
-                    Print-Ready PDF
+                    Exam-Friendly Notes
                   </span>
                 </div>
               </div>
 
-              {/* Right Column: 3D Study Desk (Enlarged by 40%+) */}
+              {/* Right Column: 3D Study Desk */}
               <div className="lg:col-span-6 xl:col-span-6 flex items-center justify-center">
                 <div className="w-full max-w-[680px]">
                   <StudyDeskScene3D />
@@ -287,14 +335,14 @@ export default function SturdyNerdyApp() {
           </section>
 
           {/* ----------------------------------------------------------- */}
-          {/* SECTION 2: HOW IT WORKS (Vertical Timeline)                */}
+          {/* SECTION 2: HOW IT WORKS                                     */}
           {/* ----------------------------------------------------------- */}
           <div id="how-it-works">
             <HowItWorksTimeline />
           </div>
 
           {/* ----------------------------------------------------------- */}
-          {/* SECTION 3: INTERACTIVE TRANSFORMATION (Scattered -> Merged) */}
+          {/* SECTION 3: INTERACTIVE TRANSFORMATION                       */}
           {/* ----------------------------------------------------------- */}
           <div id="transformation">
             <DocumentMergeShowcase />
@@ -308,87 +356,87 @@ export default function SturdyNerdyApp() {
             <div className="text-center space-y-4 mb-16">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF8F2] border border-[#EAE5D9] text-xs font-mono text-[#5A6B7D] uppercase tracking-wider">
                 <Layers className="w-3.5 h-3.5 text-[#1B2A47]" />
-                <span>Section 04 · The Ingestion Tray</span>
+                <span>Section 04 · Your Study Tray</span>
               </div>
 
               <h2 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-[#121C30] tracking-tight leading-[1.08]">
-                Your Physical Study Tray
+                Upload Your Study Materials
               </h2>
 
               <p className="text-lg sm:text-xl text-[#5A6B7D] font-serif leading-relaxed max-w-2xl mx-auto">
-                Drop multiple course materials onto the desk, or select a pre-configured university benchmark pack. 
-                When ready, proceed to generate structured notes.
+                Drop your actual PDF lecture slides, DOCX handouts, or PPTX presentation decks into the tray. 
+                Text and formulas are extracted directly from your files.
               </p>
             </div>
 
-            {/* If in 'analyzed' mode, show mode selection */}
+            {/* If in 'analyzed' mode: Select between Mode A and Mode B */}
             {workflowStep === 'analyzed' ? (
               <div className="p-8 sm:p-12 rounded-3xl bg-white border border-[#EAE5D9] shadow-desk-elevated space-y-8 animate-fadeIn">
-                <div className="flex items-center justify-between border-b border-[#EAE5D9] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#EAE5D9] pb-4 gap-3">
                   <div>
                     <h3 className="font-heading font-bold text-2xl text-[#121C30]">
-                      Choose Synthesis Architecture
+                      Choose Output Format
                     </h3>
                     <p className="font-mono text-xs text-[#808D9F] mt-0.5">
-                      {materials.length} material(s) ready for analysis.
+                      Extracted {stats.charactersExtracted.toLocaleString()} characters across {materials.length} file(s).
                     </p>
                   </div>
                   <button
                     onClick={() => setWorkflowStep('upload')}
-                    className="text-xs font-mono text-[#808D9F] hover:text-[#121C30] underline"
+                    className="text-xs font-mono text-[#808D9F] hover:text-[#121C30] underline self-start sm:self-auto"
                   >
-                    ← Back to tray
+                    ← Back to files
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* One-Glance Option */}
+                  {/* Mode A: Quick Summary */}
                   <div
-                    onClick={() => setSelectedMode('one_glance_summary')}
-                    className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${
-                      selectedMode === 'one_glance_summary'
-                        ? 'border-[#1B2A47] bg-[#FAF8F2] shadow-desk'
+                    onClick={() => setSelectedMode('quick_summary')}
+                    className={`p-6 sm:p-8 rounded-3xl border-2 cursor-pointer transition-all ${
+                      selectedMode === 'quick_summary'
+                        ? 'border-[#1B2A47] bg-[#FAF8F3] shadow-desk'
                         : 'border-[#EAE5D9] bg-white hover:border-[#DDD6C3]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-[#1B2A47] uppercase">
-                        Option A
+                      <span className="font-mono text-xs font-bold text-[#1B2A47] uppercase tracking-wider">
+                        Mode A
                       </span>
-                      {selectedMode === 'one_glance_summary' && (
+                      {selectedMode === 'quick_summary' && (
                         <CheckCircle2 className="w-5 h-5 text-[#1B2A47]" />
                       )}
                     </div>
-                    <div className="font-heading font-bold text-xl text-[#121C30] mb-2">
-                      One-Glance Summary Sheet
+                    <div className="font-heading font-bold text-2xl text-[#121C30] mb-2">
+                      Quick Summary
                     </div>
                     <p className="text-sm text-[#5A6B7D] leading-relaxed font-serif">
-                      A high-density 1-page executive summary containing the core thesis, top 5 exam takeaways, formula cheat ledger, and a 5-minute pre-exam checklist.
+                      A concise student-friendly summary. Extracts main topic, core concepts, key takeaways, definitions, and essential formulas. Maximum 1 page.
                     </p>
                   </div>
 
-                  {/* Revision Notes Option */}
+                  {/* Mode B: Revision Notes */}
                   <div
                     onClick={() => setSelectedMode('revision_notes')}
-                    className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+                    className={`p-6 sm:p-8 rounded-3xl border-2 cursor-pointer transition-all ${
                       selectedMode === 'revision_notes'
                         ? 'border-[#4A6B5D] bg-[#EFF5F1]/50 shadow-desk'
                         : 'border-[#EAE5D9] bg-white hover:border-[#DDD6C3]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-[#4A6B5D] uppercase">
-                        Option B
+                      <span className="font-mono text-xs font-bold text-[#4A6B5D] uppercase tracking-wider">
+                        Mode B
                       </span>
                       {selectedMode === 'revision_notes' && (
                         <CheckCircle2 className="w-5 h-5 text-[#4A6B5D]" />
                       )}
                     </div>
-                    <div className="font-heading font-bold text-xl text-[#121C30] mb-2">
-                      Full Comprehensive Revision
+                    <div className="font-heading font-bold text-2xl text-[#121C30] mb-2">
+                      Revision Notes
                     </div>
                     <p className="text-sm text-[#5A6B7D] leading-relaxed font-serif">
-                      An exhaustive academic journal: formal definitions with LaTeX, step-by-step mathematical derivations, memory mnemonics, and in-depth syllabus units.
+                      Structured revision notes for exam prep. Uses clear headings, subtopics, clean bullet points, definitions, formulas, and high-yield exam tips.
                     </p>
                   </div>
                 </div>
@@ -396,28 +444,27 @@ export default function SturdyNerdyApp() {
                 <div className="pt-4 flex justify-center">
                   <button
                     onClick={() => handleGenerate(selectedMode)}
-                    className="px-10 py-4 rounded-2xl bg-[#1B2A47] hover:bg-[#121C30] text-white font-mono font-bold text-base transition-all shadow-desk hover:shadow-desk-elevated"
+                    className="px-10 py-4 rounded-2xl bg-[#1B2A47] hover:bg-[#121C30] text-white font-mono font-bold text-base transition-all shadow-desk hover:shadow-desk-elevated active:scale-[0.99]"
                   >
-                    Synthesize {selectedMode === 'one_glance_summary' ? 'Summary Sheet' : 'Full Revision'} →
+                    Generate {selectedMode === 'quick_summary' ? 'Quick Summary' : 'Revision Notes'} →
                   </button>
                 </div>
               </div>
             ) : (
               /* Physical Desk Tray Component */
-              <div className="p-8 sm:p-12 rounded-3xl bg-white border border-[#EAE5D9] shadow-desk-elevated">
-                <StudyTrayUpload
-                  materials={materials}
-                  onAddMaterials={handleAddMaterials}
-                  onRemoveMaterial={handleRemoveMaterial}
-                  onProceedToAnalyze={handleProceedToAnalyze}
-                  onLoadBundle={handleLoadBundle}
-                />
-              </div>
+              <StudyTrayUpload
+                materials={materials}
+                stats={stats}
+                onAddMaterials={handleAddMaterials}
+                onRemoveMaterial={handleRemoveMaterial}
+                onProceedToAnalyze={handleProceedToAnalyze}
+                onClearAll={handleClearAll}
+              />
             )}
           </section>
 
           {/* ----------------------------------------------------------- */}
-          {/* SECTION 5: OUTPUT PREVIEW (Notebook Showcase)               */}
+          {/* SECTION 5: OUTPUT PREVIEW                                   */}
           {/* ----------------------------------------------------------- */}
           <div id="preview">
             <NotebookPreviewShowcase />
@@ -500,7 +547,7 @@ export default function SturdyNerdyApp() {
           </section>
 
           {/* ----------------------------------------------------------- */}
-          {/* SECTION 7: FINAL CTA (Clean, Simple, Elegant)               */}
+          {/* SECTION 7: FINAL CTA                                        */}
           {/* ----------------------------------------------------------- */}
           <section className="relative py-28 lg:py-36 px-6 sm:px-12 max-w-5xl mx-auto text-center space-y-8">
             <div className="w-16 h-16 rounded-3xl bg-[#1B2A47] text-white flex items-center justify-center font-heading text-2xl font-bold mx-auto shadow-desk">
@@ -512,7 +559,7 @@ export default function SturdyNerdyApp() {
             </h2>
 
             <p className="text-xl sm:text-2xl text-[#5A6B7D] font-serif leading-relaxed max-w-2xl mx-auto">
-              Drop your first set of course slides into the study tray and experience the calm of structured knowledge.
+              Drop your lecture files into the study tray and experience clean, student-crafted revision notes.
             </p>
 
             <div className="pt-4">
@@ -535,16 +582,19 @@ export default function SturdyNerdyApp() {
             <span className="font-heading font-bold text-sm text-[#121C30]">SturdyNerdy</span>
             <span>— From lecture chaos to study clarity.</span>
           </div>
-          <span>Single-Workflow Academic Architecture · Zero Distractions</span>
+          <span>Single-Workflow Academic Architecture · Real Document Extraction</span>
         </div>
       </footer>
 
-      {/* Believable Multi-Stage Processing Flow Modal */}
+      {/* Real Multi-Stage Processing Flow Modal with Debugging Logs */}
       <ProcessingFlowModal
         isOpen={isProcessingModalOpen}
         materials={materials}
         mode={selectedMode}
+        isApiDone={isApiDone}
+        apiError={apiError}
         onComplete={handleProcessingComplete}
+        onDismissError={handleDismissError}
       />
     </div>
   );

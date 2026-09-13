@@ -2,14 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
+  CheckCircle2, 
   Loader2, 
-  Check, 
   Sparkles, 
-  BookOpen,
+  FileText, 
+  Cpu, 
+  Check, 
+  BookOpen, 
   Layers,
-  FileSpreadsheet,
-  CheckCircle2,
-  FileCheck
+  Terminal
 } from 'lucide-react';
 import { OutputMode, UploadedStudyMaterial } from '@/lib/types';
 
@@ -17,197 +18,214 @@ interface ProcessingFlowModalProps {
   isOpen: boolean;
   materials: UploadedStudyMaterial[];
   mode: OutputMode;
+  isApiDone: boolean;
+  apiError: string | null;
   onComplete: () => void;
+  onDismissError: () => void;
 }
 
-const PIPELINE_STEPS = [
-  { id: 1, label: 'Reading Documents', desc: 'Parsing text and mathematical structures from files' },
-  { id: 2, label: 'Extracting Concepts', desc: 'Isolating fundamental claims, theorems, and definitions' },
-  { id: 3, label: 'Identifying Topics', desc: 'Cross-referencing terminology across multi-source corpus' },
-  { id: 4, label: 'Building Structure', desc: 'Organizing syllabus units, comparison tables, and edge cases' },
-  { id: 5, label: 'Writing Notes', desc: 'Typesetting LaTeX equations and drafting executive takeaways' },
-  { id: 6, label: 'Finalizing Output', desc: 'Compiling publication-ready journal format & PDF pagination' },
-];
+interface LogEntry {
+  step: number;
+  label: string;
+  detail: string;
+  status: 'pending' | 'active' | 'done';
+}
 
 export function ProcessingFlowModal({
   isOpen,
   materials,
   mode,
+  isApiDone,
+  apiError,
   onComplete,
+  onDismissError,
 }: ProcessingFlowModalProps) {
-  const [currentStepIdx, setCurrentStepIdx] = useState(0);
-  const [progress, setProgress] = useState(10);
-  const [transformStage, setTransformStage] = useState<'converge' | 'merged' | 'opened'>('converge');
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const totalChars = materials.reduce((sum, m) => sum + (m.charCount || 0), 0);
+  const totalPages = materials.reduce((sum, m) => sum + (m.pageCount || 1), 0);
+
+  // Debugging steps required by user
+  const [logs, setLogs] = useState<LogEntry[]>([
+    {
+      step: 1,
+      label: 'File uploaded',
+      detail: `${materials.length} file(s) staged into memory`,
+      status: 'pending',
+    },
+    {
+      step: 2,
+      label: 'Text extracted',
+      detail: `${totalChars.toLocaleString()} characters extracted across ${totalPages} pages/slides`,
+      status: 'pending',
+    },
+    {
+      step: 3,
+      label: 'Gemini request sent',
+      detail: `Sending ${mode === 'quick_summary' ? 'Quick Summary' : 'Revision Notes'} prompt to Gemini model`,
+      status: 'pending',
+    },
+    {
+      step: 4,
+      label: 'Gemini response received',
+      detail: 'Synthesizing response and validating JSON schema',
+      status: 'pending',
+    },
+    {
+      step: 5,
+      label: 'Notes generated',
+      detail: 'Formatting student revision sheet with LaTeX math',
+      status: 'pending',
+    },
+  ]);
 
   useEffect(() => {
     if (!isOpen) {
-      setCurrentStepIdx(0);
-      setProgress(10);
-      setTransformStage('converge');
+      setCurrentStep(1);
       return;
     }
 
-    // Progress counter
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 98) {
-          clearInterval(timer);
-          return 100;
-        }
-        return prev + Math.floor(Math.random() * 8 + 5);
-      });
-    }, 380);
+    // Step 1: File uploaded (immediate)
+    setLogs((prev) =>
+      prev.map((l) => (l.step === 1 ? { ...l, status: 'done' } : l.step === 2 ? { ...l, status: 'active' } : l))
+    );
 
-    return () => clearInterval(timer);
+    // Step 2: Text extracted (at 400ms)
+    const t1 = setTimeout(() => {
+      setLogs((prev) =>
+        prev.map((l) =>
+          l.step <= 2 ? { ...l, status: 'done' } : l.step === 3 ? { ...l, status: 'active' } : l
+        )
+      );
+      setCurrentStep(3);
+    }, 500);
+
+    return () => clearTimeout(t1);
   }, [isOpen]);
 
+  // When API response arrives
   useEffect(() => {
     if (!isOpen) return;
 
-    // Step index mapped to 6 steps
-    const step = Math.min(5, Math.floor((progress / 100) * 6));
-    setCurrentStepIdx(step);
+    if (isApiDone && !apiError) {
+      // Mark steps 3, 4, 5 as done
+      setLogs((prev) =>
+        prev.map((l) =>
+          l.step <= 4 ? { ...l, status: 'done' } : { ...l, status: 'active' }
+        )
+      );
+      setCurrentStep(4);
 
-    if (progress < 45) {
-      setTransformStage('converge');
-    } else if (progress < 85) {
-      setTransformStage('merged');
-    } else {
-      setTransformStage('opened');
-    }
+      const t2 = setTimeout(() => {
+        setLogs((prev) => prev.map((l) => ({ ...l, status: 'done' })));
+        setCurrentStep(5);
 
-    if (progress >= 100) {
-      const timeout = setTimeout(() => {
-        onComplete();
-      }, 500);
-      return () => clearTimeout(timeout);
+        const t3 = setTimeout(() => {
+          onComplete();
+        }, 600);
+        return () => clearTimeout(t3);
+      }, 400);
+
+      return () => clearTimeout(t2);
     }
-  }, [progress, isOpen, onComplete]);
+  }, [isApiDone, apiError, isOpen, onComplete]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1320]/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#FAF8F3] rounded-3xl border border-[#E8E2D2] shadow-desk-elevated max-w-lg w-full p-6 sm:p-8 space-y-6 overflow-hidden relative">
-        {/* Leather Notebook Binding Accent */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1B2A47] via-[#4A6B5D] to-[#C5A059]" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1320]/65 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-3xl border border-[#E8E2D2] shadow-desk-elevated max-w-lg w-full p-6 sm:p-8 space-y-6 overflow-hidden relative">
+        {/* Top Accent Strip */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#1B2A47]" />
 
-        {/* Cinematic Notes Generation Visual Transformation */}
-        <div className="relative h-28 rounded-2xl bg-[#F5F1E6] border border-[#E8E2D2] flex items-center justify-center overflow-hidden">
-          {/* Subtle notebook ruled background inside stage */}
-          <div className="absolute inset-0 notebook-ruled opacity-20" />
-
-          {transformStage === 'converge' && (
-            <div className="flex items-center gap-3 animate-fadeIn">
-              <div className="w-10 h-12 rounded-md bg-white border border-[#E8E2D2] shadow-desk flex items-center justify-center font-mono text-[9px] font-bold text-[#1B2A47] transform -rotate-6 animate-pulse">
-                PDF
-              </div>
-              <div className="w-10 h-12 rounded-md bg-white border border-[#CFDDD5] shadow-desk flex items-center justify-center font-mono text-[9px] font-bold text-[#4A6B5D] transform translate-y-1">
-                DOC
-              </div>
-              <div className="w-10 h-12 rounded-md bg-white border border-[#E9D8B4] shadow-desk flex items-center justify-center font-mono text-[9px] font-bold text-[#8C6D3F] transform rotate-6 animate-pulse">
-                PPT
-              </div>
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-[#EAE5D9] pb-4">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#4A6B5D] animate-pulse" />
+              <h3 className="font-heading font-bold text-xl text-[#121C2B]">
+                Generating Study Notes
+              </h3>
             </div>
-          )}
-
-          {transformStage === 'merged' && (
-            <div className="flex flex-col items-center space-y-1 animate-fadeIn">
-              <div className="w-14 h-16 rounded-md bg-[#1B2A47] border border-[#C5A059] shadow-journal flex items-center justify-center text-[#C5A059] transform scale-105">
-                <BookOpen className="w-6 h-6 animate-pulse" />
-              </div>
-              <span className="font-serif text-[10px] text-[#1B2A47] font-bold">
-                Synthesizing Unified Journal...
-              </span>
-            </div>
-          )}
-
-          {transformStage === 'opened' && (
-            <div className="flex items-center gap-1.5 bg-white p-2.5 rounded-xl border border-[#C5A059] shadow-desk animate-fadeIn">
-              <Sparkles className="w-4 h-4 text-[#C5A059]" />
-              <div className="text-left">
-                <div className="font-serif font-bold text-xs text-[#121C2B]">
-                  {mode === 'one_glance_summary' ? 'One-Glance Exam Sheet' : 'Comprehensive Revision Notes'}
-                </div>
-                <div className="text-[9px] font-mono text-[#4A6B5D]">
-                  Structured & Ready to Study
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Header Title */}
-        <div className="text-center space-y-1">
-          <h3 className="font-serif font-bold text-xl text-[#121C2B]">
-            SturdyNerdy Study Desk
-          </h3>
-          <p className="text-xs font-mono text-[#60728B]">
-            Synthesizing {materials.length} uploaded files into structured notes
-          </p>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[#60728B]">
-            <span>Synthesis Pipeline</span>
-            <span className="font-bold text-[#1B2A47]">{progress}%</span>
+            <p className="font-mono text-xs text-[#8595AB]">
+              Processing actual uploaded lecture content
+            </p>
           </div>
-          <div className="w-full bg-[#E8E2D2] h-2 rounded-full overflow-hidden p-0.5">
-            <div
-              style={{ width: `${progress}%` }}
-              className="bg-gradient-to-r from-[#1B2A47] to-[#4A6B5D] h-full rounded-full transition-all duration-300 ease-out"
-            />
-          </div>
+
+          <span className="text-xs font-mono font-medium px-3 py-1 rounded-full bg-[#FAF8F3] border border-[#EAE5D9] text-[#1B2A47]">
+            {mode === 'quick_summary' ? 'Mode A: Summary' : 'Mode B: Revision'}
+          </span>
         </div>
 
-        {/* The 6-Step Pipeline */}
-        <div className="space-y-2.5 bg-white p-4 rounded-2xl border border-[#E8E2D2] shadow-desk">
-          {PIPELINE_STEPS.map((step, idx) => {
-            const isDone = idx < currentStepIdx || progress >= 100;
-            const isCurrent = idx === currentStepIdx && progress < 100;
+        {/* If an error occurs, display it clearly */}
+        {apiError ? (
+          <div className="p-5 bg-red-50 border border-red-200 rounded-2xl space-y-3 animate-fadeIn">
+            <div className="font-mono text-xs font-bold text-red-700 uppercase flex items-center gap-2">
+              <span>Generation Error</span>
+            </div>
+            <p className="text-xs font-serif text-red-900 leading-relaxed">
+              {apiError}
+            </p>
+            <button
+              onClick={onDismissError}
+              className="px-4 py-2 rounded-xl bg-red-700 text-white font-mono text-xs font-semibold hover:bg-red-800 transition-colors"
+            >
+              Close & Return to Tray
+            </button>
+          </div>
+        ) : (
+          /* Real Activity Debugging Log (User Requirement) */
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#455770]">
+              <Terminal className="w-3.5 h-3.5 text-[#1B2A47]" />
+              <span>Live Generation Pipeline</span>
+            </div>
 
-            return (
-              <div
-                key={step.id}
-                className={`flex items-start gap-3 transition-opacity duration-300 ${
-                  idx > currentStepIdx ? 'opacity-30' : 'opacity-100'
-                }`}
-              >
+            <div className="space-y-2.5 bg-[#FAF8F3] border border-[#EAE5D9] rounded-2xl p-4">
+              {logs.map((log) => (
                 <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-mono transition-colors ${
-                    isDone
-                      ? 'bg-[#4A6B5D] text-white'
-                      : isCurrent
-                      ? 'bg-[#1B2A47] text-white'
-                      : 'bg-[#E8E2D2] text-[#8595AB]'
+                  key={log.step}
+                  className={`flex items-start gap-3 text-xs transition-opacity duration-300 ${
+                    log.status === 'pending'
+                      ? 'opacity-40'
+                      : log.status === 'active'
+                      ? 'opacity-100 font-semibold'
+                      : 'opacity-90'
                   }`}
                 >
-                  {isDone ? (
-                    <Check className="w-3 h-3" />
-                  ) : isCurrent ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    step.id
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1 flex items-baseline justify-between">
-                  <div
-                    className={`font-serif text-xs font-bold ${
-                      isCurrent ? 'text-[#1B2A47]' : isDone ? 'text-[#121C2B]' : 'text-[#8595AB]'
-                    }`}
-                  >
-                    {step.label}
+                  <div className="mt-0.5 shrink-0">
+                    {log.status === 'done' ? (
+                      <CheckCircle2 className="w-4 h-4 text-[#4A6B5D]" />
+                    ) : log.status === 'active' ? (
+                      <Loader2 className="w-4 h-4 text-[#1B2A47] animate-spin" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border border-[#CBD5E1] bg-white" />
+                    )}
                   </div>
-                  <span className="text-[10px] font-mono text-[#8595AB] truncate ml-2">
-                    {step.desc}
-                  </span>
+
+                  <div className="space-y-0.5 flex-1 min-w-0">
+                    <div className="font-mono text-xs font-bold text-[#121C2B]">
+                      {log.status === 'done' && '✓ '}
+                      {log.label}
+                    </div>
+                    <div className="text-[11px] font-sans text-[#64748B] truncate">
+                      {log.detail}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              ))}
+            </div>
+
+            {/* Extracted Stats Snapshot */}
+            <div className="pt-1 flex items-center justify-between text-[11px] font-mono text-[#8595AB] px-1">
+              <span>{materials.length} file(s) in payload</span>
+              <span>•</span>
+              <span>{totalPages} page(s)</span>
+              <span>•</span>
+              <span>{totalChars.toLocaleString()} characters</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
