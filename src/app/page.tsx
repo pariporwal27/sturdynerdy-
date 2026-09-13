@@ -33,6 +33,7 @@ import { DocumentMergeShowcase } from '@/components/DocumentMergeShowcase';
 import { NotebookPreviewShowcase } from '@/components/NotebookPreviewShowcase';
 
 import { DigitalNotebookResult } from '@/components/DigitalNotebookResult';
+import { ModeSelectionStage } from '@/components/ModeSelectionStage';
 import { ProcessingFlowModal } from '@/components/ProcessingFlowModal';
 
 export default function SturdyNerdyApp() {
@@ -372,85 +373,14 @@ export default function SturdyNerdyApp() {
 
             {/* If in 'analyzed' mode: Select between Mode A and Mode B */}
             {workflowStep === 'analyzed' ? (
-              <div className="p-8 sm:p-12 rounded-3xl bg-white border border-[#EAE5D9] shadow-desk-elevated space-y-8 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#EAE5D9] pb-4 gap-3">
-                  <div>
-                    <h3 className="font-heading font-bold text-2xl text-[#121C30]">
-                      Choose Output Format
-                    </h3>
-                    <p className="font-mono text-xs text-[#808D9F] mt-0.5">
-                      Extracted {stats.charactersExtracted.toLocaleString()} characters across {materials.length} file(s).
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setWorkflowStep('upload')}
-                    className="text-xs font-mono text-[#808D9F] hover:text-[#121C30] underline self-start sm:self-auto"
-                  >
-                    ← Back to files
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Mode A: Quick Summary */}
-                  <div
-                    onClick={() => setSelectedMode('quick_summary')}
-                    className={`p-6 sm:p-8 rounded-3xl border-2 cursor-pointer transition-all ${
-                      selectedMode === 'quick_summary'
-                        ? 'border-[#1B2A47] bg-[#FAF8F3] shadow-desk'
-                        : 'border-[#EAE5D9] bg-white hover:border-[#DDD6C3]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-[#1B2A47] uppercase tracking-wider">
-                        Mode A
-                      </span>
-                      {selectedMode === 'quick_summary' && (
-                        <CheckCircle2 className="w-5 h-5 text-[#1B2A47]" />
-                      )}
-                    </div>
-                    <div className="font-heading font-bold text-2xl text-[#121C30] mb-2">
-                      Quick Summary
-                    </div>
-                    <p className="text-sm text-[#5A6B7D] leading-relaxed font-serif">
-                      A concise student-friendly summary. Extracts main topic, core concepts, key takeaways, definitions, and essential formulas. Maximum 1 page.
-                    </p>
-                  </div>
-
-                  {/* Mode B: Revision Notes */}
-                  <div
-                    onClick={() => setSelectedMode('revision_notes')}
-                    className={`p-6 sm:p-8 rounded-3xl border-2 cursor-pointer transition-all ${
-                      selectedMode === 'revision_notes'
-                        ? 'border-[#4A6B5D] bg-[#EFF5F1]/50 shadow-desk'
-                        : 'border-[#EAE5D9] bg-white hover:border-[#DDD6C3]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-[#4A6B5D] uppercase tracking-wider">
-                        Mode B
-                      </span>
-                      {selectedMode === 'revision_notes' && (
-                        <CheckCircle2 className="w-5 h-5 text-[#4A6B5D]" />
-                      )}
-                    </div>
-                    <div className="font-heading font-bold text-2xl text-[#121C30] mb-2">
-                      Revision Notes
-                    </div>
-                    <p className="text-sm text-[#5A6B7D] leading-relaxed font-serif">
-                      Structured revision notes for exam prep. Uses clear headings, subtopics, clean bullet points, definitions, formulas, and high-yield exam tips.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 flex justify-center">
-                  <button
-                    onClick={() => handleGenerate(selectedMode)}
-                    className="px-10 py-4 rounded-2xl bg-[#1B2A47] hover:bg-[#121C30] text-white font-mono font-bold text-base transition-all shadow-desk hover:shadow-desk-elevated active:scale-[0.99]"
-                  >
-                    Generate {selectedMode === 'quick_summary' ? 'Quick Summary' : 'Revision Notes'} →
-                  </button>
-                </div>
-              </div>
+              <ModeSelectionStage
+                selectedMode={selectedMode}
+                onSelectMode={setSelectedMode}
+                onGenerate={handleGenerate}
+                onBackToFiles={() => setWorkflowStep('upload')}
+                totalCharacters={stats.charactersExtracted}
+                totalFiles={materials.length}
+              />
             ) : (
               /* Physical Desk Tray Component */
               <StudyTrayUpload

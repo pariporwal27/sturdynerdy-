@@ -33,10 +33,17 @@ export function NotebookPreviewShowcase() {
         </p>
 
         {/* Notebook Tab Selector */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+        <div 
+          role="tablist" 
+          aria-label="Notebook preview sections"
+          className="flex flex-wrap items-center justify-center gap-2 pt-4"
+        >
           <button
+            role="tab"
+            aria-selected={activeTab === 'summary'}
+            aria-label="1. One-Glance Summary tab"
             onClick={() => setActiveTab('summary')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] ${
               activeTab === 'summary'
                 ? 'bg-[#1B2A47] text-white shadow-2xs'
                 : 'bg-white text-[#5A6B7D] border border-[#EAE5D9] hover:bg-[#FAF8F4]'
@@ -46,8 +53,11 @@ export function NotebookPreviewShowcase() {
             1. One-Glance Summary
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'derivations'}
+            aria-label="2. In-Depth Derivations tab"
             onClick={() => setActiveTab('derivations')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] ${
               activeTab === 'derivations'
                 ? 'bg-[#1B2A47] text-white shadow-2xs'
                 : 'bg-white text-[#5A6B7D] border border-[#EAE5D9] hover:bg-[#FAF8F4]'
@@ -57,8 +67,11 @@ export function NotebookPreviewShowcase() {
             2. In-Depth Derivations
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'formulas'}
+            aria-label="3. Formula Rulebook tab"
             onClick={() => setActiveTab('formulas')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] ${
               activeTab === 'formulas'
                 ? 'bg-[#1B2A47] text-white shadow-2xs'
                 : 'bg-white text-[#5A6B7D] border border-[#EAE5D9] hover:bg-[#FAF8F4]'
@@ -68,8 +81,11 @@ export function NotebookPreviewShowcase() {
             3. Formula Rulebook
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'traps'}
+            aria-label="4. Sticky Exam Traps tab"
             onClick={() => setActiveTab('traps')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] ${
               activeTab === 'traps'
                 ? 'bg-[#1B2A47] text-white shadow-2xs'
                 : 'bg-white text-[#5A6B7D] border border-[#EAE5D9] hover:bg-[#FAF8F4]'

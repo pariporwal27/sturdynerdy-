@@ -40,6 +40,7 @@ export function StudyTrayUpload({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.doc', '.pptx', '.ppt', '.txt', '.md'];
 
   const handleFiles = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
@@ -51,6 +52,18 @@ export function StudyTrayUpload({
       const formData = new FormData();
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
+        const isSupported = ALLOWED_EXTENSIONS.some((ext) =>
+          file.name.toLowerCase().endsWith(ext)
+        );
+
+        if (!isSupported) {
+          setErrorMessage(
+            `File "${file.name}" has an unsupported format. Please upload PDF, DOCX, PPTX, TXT, or MD files.`
+          );
+          setIsExtracting(false);
+          return;
+        }
+
         if (file.size > 30 * 1024 * 1024) {
           setErrorMessage(`File "${file.name}" exceeds the 30MB limit.`);
           setIsExtracting(false);
@@ -105,7 +118,10 @@ export function StudyTrayUpload({
     <div className="space-y-6">
       {/* Real Extraction Error Banner */}
       {errorMessage && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start justify-between gap-3 text-red-900 shadow-2xs animate-fadeIn">
+        <div 
+          role="alert"
+          className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start justify-between gap-3 text-red-900 shadow-2xs animate-fadeIn"
+        >
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div className="space-y-1">
@@ -119,7 +135,8 @@ export function StudyTrayUpload({
           </div>
           <button
             onClick={() => setErrorMessage(null)}
-            className="text-xs font-mono text-red-600 hover:text-red-900 underline shrink-0"
+            aria-label="Dismiss error notification"
+            className="text-xs font-mono text-red-600 hover:text-red-900 underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 rounded"
           >
             Dismiss
           </button>
@@ -128,11 +145,20 @@ export function StudyTrayUpload({
 
       {/* The Physical Study Tray Container */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Upload study materials: drop files or click to browse"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative rounded-3xl p-8 sm:p-12 cursor-pointer transition-all duration-300 border ${
+        className={`relative rounded-3xl p-8 sm:p-12 cursor-pointer transition-all duration-300 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] focus-visible:ring-offset-2 ${
           isDragging
             ? 'bg-[#F2ECE0] border-[#1B2A47] shadow-desk-elevated scale-[1.01]'
             : 'bg-[#FAF6EE] border-[#E5DEC9] hover:border-[#1B2A47]/40 shadow-tray hover:shadow-desk'
@@ -140,6 +166,8 @@ export function StudyTrayUpload({
       >
         <input
           type="file"
+          id="study-material-file-input"
+          aria-label="Select study material files"
           ref={fileInputRef}
           multiple
           accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md"
@@ -210,7 +238,8 @@ export function StudyTrayUpload({
 
             <button
               onClick={onClearAll}
-              className="text-xs font-mono text-[#8595AB] hover:text-red-700 underline self-start sm:self-auto"
+              aria-label="Clear all materials"
+              className="text-xs font-mono text-[#8595AB] hover:text-red-700 underline self-start sm:self-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 rounded"
             >
               Clear all materials
             </button>
@@ -291,8 +320,9 @@ export function StudyTrayUpload({
 
                   <button
                     onClick={() => onRemoveMaterial(mat.id)}
-                    className="text-[#8595AB] hover:text-red-700 p-2 rounded-xl hover:bg-white transition-colors shrink-0"
-                    title="Remove from tray"
+                    aria-label={`Remove ${mat.name} from study tray`}
+                    className="text-[#8595AB] hover:text-red-700 p-2 rounded-xl hover:bg-white transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                    title={`Remove ${mat.name}`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -305,7 +335,8 @@ export function StudyTrayUpload({
           <div className="pt-4 flex justify-end">
             <button
               onClick={onProceedToAnalyze}
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-[#1B2A47] hover:bg-[#101B2E] text-white text-sm font-mono font-bold transition-all shadow-desk hover:shadow-desk-elevated active:scale-[0.99]"
+              aria-label="Choose notes mode"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-[#1B2A47] hover:bg-[#101B2E] text-white text-sm font-mono font-bold transition-all shadow-desk hover:shadow-desk-elevated active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] focus-visible:ring-offset-2"
             >
               <span>Choose Notes Mode</span>
               <ArrowRight className="w-4 h-4" />

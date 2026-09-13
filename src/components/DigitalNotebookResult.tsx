@@ -91,10 +91,17 @@ export function DigitalNotebookResult({
       {/* Top Action Bar (Non-Printable) */}
       <div className="bg-white rounded-2xl border border-[#EAE5D9] p-4 sm:p-5 shadow-desk flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         {/* Mode Toggle Switcher */}
-        <div className="flex items-center bg-[#FAF8F3] p-1 rounded-xl border border-[#EAE5D9]">
+        <div 
+          role="tablist" 
+          aria-label="Notebook view mode switcher"
+          className="flex items-center bg-[#FAF8F3] p-1 rounded-xl border border-[#EAE5D9]"
+        >
           <button
+            role="tab"
+            aria-selected={output.mode === 'quick_summary'}
+            aria-label="Switch to Quick Summary view"
             onClick={() => onSwitchMode('quick_summary')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] ${
               output.mode === 'quick_summary'
                 ? 'bg-[#1B2A47] text-white shadow-2xs'
                 : 'text-[#5A6B7D] hover:text-[#121C2B]'
@@ -104,8 +111,11 @@ export function DigitalNotebookResult({
             Quick Summary
           </button>
           <button
+            role="tab"
+            aria-selected={output.mode === 'revision_notes'}
+            aria-label="Switch to Revision Notes view"
             onClick={() => onSwitchMode('revision_notes')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] ${
               output.mode === 'revision_notes'
                 ? 'bg-[#1B2A47] text-white shadow-2xs'
                 : 'text-[#5A6B7D] hover:text-[#121C2B]'
@@ -120,7 +130,8 @@ export function DigitalNotebookResult({
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopyMarkdown}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#EAE5D9] bg-white hover:bg-[#FAF8F4] text-xs font-mono text-[#121C2B] transition-colors shadow-2xs"
+            aria-label="Copy notes to clipboard as Markdown"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#EAE5D9] bg-white hover:bg-[#FAF8F4] text-xs font-mono text-[#121C2B] transition-colors shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47]"
             title="Copy as Markdown"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-[#4A6B5D]" /> : <Copy className="w-3.5 h-3.5" />}
@@ -129,7 +140,8 @@ export function DigitalNotebookResult({
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1B2A47] hover:bg-[#121C30] text-white text-xs font-mono font-semibold transition-all shadow-desk"
+            aria-label="Export or print notes as PDF"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1B2A47] hover:bg-[#121C30] text-white text-xs font-mono font-semibold transition-all shadow-desk focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47] focus-visible:ring-offset-2"
             title="Export as PDF"
           >
             <Printer className="w-3.5 h-3.5" />
@@ -138,7 +150,8 @@ export function DigitalNotebookResult({
 
           <button
             onClick={onStartNew}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EAE5D9] bg-white hover:bg-[#FAF8F4] text-[#8595AB] hover:text-[#121C2B] text-xs font-mono transition-colors"
+            aria-label="Upload new materials and start new session"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EAE5D9] bg-white hover:bg-[#FAF8F4] text-[#8595AB] hover:text-[#121C2B] text-xs font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A47]"
             title="Upload new materials"
           >
             <RotateCcw className="w-3.5 h-3.5" />
