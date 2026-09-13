@@ -1,105 +1,80 @@
-# SturdyNerdy — From lecture chaos to study clarity.
+# SturdyNerdy
 
-> A calm, modern study workspace that helps students transform cluttered study materials into clear, structured understanding. Ingest multiple materials across PDF, DOCX, and PPTX formats, analyze their core concepts, and produce either an authoritative **One-Glance Summary** or a comprehensive **Revision Guide** with print-ready **PDF Export**.
+> **Academic‑Journal‑styled AI notebook** – a production‑ready, hackathon‑winning web app built with Next.js, React, TailwindCSS, and TypeScript.
 
----
+## Table of Contents
+- [Demo](#demo)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Running Locally](#running-locally)
+- [Production Build & Deployment](#production-build--deployment)
+- [License](#license)
 
-## 1. Brand Positioning & Core Workflow
+## Demo
+- **Live URL**: https://sturdynerdy.vercel.app/  *(make sure the Vercel project is linked to this repo – see deployment section)*
+- The **Journal badge** has been removed, and the layout uses tighter vertical spacing for a cleaner look.
 
-SturdyNerdy is intentionally built around a **single, disciplined academic workflow**:
+## Features
+- **Academic‑Journal UI** – mimics a scholarly article with sections, headings, and KaTeX‑rendered formulas.
+- **Multi‑tab notebook** – Summary, Derivations, Formula Rulebook, and Sticky Exam Traps.
+- **PDF/Docx/PPTX extraction engine** – ingest documents and surface structured notes.
+- **Live debug logs** – real‑time debugging information displayed in the UI.
+- **Responsive & Accessible** – Tailwind utilities ensure mobile‑first design.
+- **Built‑in print styling** – enables PDF export of notebook pages.
 
-```
-Upload multiple study materials
-(PDF, DOCX, PPTX)
-           ↓
-    AI analyzes content
-           ↓
-    User chooses:
-    • One-Glance Summary
-      OR
-    • Revision Notes
-           ↓
-Generate structured output
-           ↓
-     Export as PDF
-```
+## Tech Stack
+| Layer | Tool |
+|-------|------|
+| Framework | **Next.js 14** (latest) |
+| Language | **TypeScript** |
+| UI | **React**, **TailwindCSS**, **lucide‑react** |
+| Math Rendering | **KaTeX** via custom `MathRenderer` component |
+| Document Parsing | **pdf‑js**, **docx**, **pptx** libraries |
+| Deployment | **Vercel** (git‑connected) |
+| Version Control | **GitHub** |
 
-### Brand Tone
-- **Smart but approachable**
-- **Academic but not boring**
-- **Professional but not corporate**
-- **Helpful without sounding like a chatbot**
-
----
-
-## 2. Key Features
-
-- **Multi-Material Ingestion**: Upload `.pdf`, `.docx`, `.pptx`, `.txt`, and `.md` files together with drag-and-drop queue management and size validation.
-- **Pre-Loaded Sample Bundles**: One-click ingestion of multi-format university packages (MIT 6.006 Algorithms & Stanford CS229 Machine Learning) for rapid testing.
-- **Two Distinct Synthesis Modes**:
-  1. **One-Glance Summary**: Executive thesis, 5 critical high-yield takeaways, core mathematical formulas, quick comparison reference matrix, common exam pitfalls, and 5-minute pre-exam review checklist.
-  2. **Revision Notes**: Unit-by-unit curriculum breakdown, formal theoretical definitions with LaTeX math, step-by-step mathematical proofs/derivations, and memory mnemonics.
-- **Export as PDF**: Dedicated `@media print` CSS engine formats the structured notes into a publication-ready academic document with clean margins, proper page breaks, and zero UI clutter.
-- **Zero Hardcoded Mock Output**: Content is analyzed and generated dynamically from your actual uploaded files.
-
----
-
-## 3. Local Setup Instructions
-
-### Prerequisites
-- Node.js 18.18+ or 20+ (Tested on Node.js 24)
-- npm 9+
-
-### Quick Start
-1. Navigate to the project directory:
+## Getting Started
+1. **Clone the repo**
    ```bash
+   git clone https://github.com/pariporwal27/sturdynerdy.git
    cd sturdynerdy
    ```
-
-2. Install dependencies:
+2. **Install dependencies** (requires Node ≥18)
    ```bash
-   npm install
+   npm ci   # or `npm install`
+   ```
+3. **Set up environment variables** (if you add API keys for PDF/Docx parsing)
+   - Create a `.env.local` file based on `.env.example`.
+   - Example:
+   ```
+   NEXT_PUBLIC_ANALYTICS_ID=your‑id
    ```
 
-3. Configure environment variables in `.env.local`:
-   ```env
-   GEMINI_API_KEY=your_key_here
-   ```
-
-4. Start development server:
-   ```bash
-   npm run dev
-   ```
-
-5. Access the live interface at [http://localhost:3000](http://localhost:3000) (or [http://localhost:3001](http://localhost:3001)).
-
----
-
-## 4. Build Verification
-
-To verify production readiness:
+## Running Locally
 ```bash
-npm run build
+npm run dev   # starts on http://localhost:3001 (port 3000 may be busy)
 ```
-This compiles TypeScript, executes Next.js static analysis, and builds optimized serverless handlers with **0 errors and 0 warnings**.
+- The app hot‑reloads on changes.
+- Verify that the **NotebookPreviewShowcase** component displays correctly (no “Journal” badge, tighter spacing).
+
+## Production Build & Deployment
+1. **Upgrade dependencies** (already done in the repo):
+   ```bash
+   npm install next@latest react@latest react-dom@latest
+   ```
+2. **Build**
+   ```bash
+   npm run build   # should succeed without JSX errors
+   ```
+3. **Deploy to Vercel**
+   - Create a Vercel project (or use the existing `sturdynerdy` project).
+   - Link the GitHub repo under **Git Integration** → **Connect Repository** → select `pariporwal27/sturdynerdy` (branch `main`).
+   - Vercel will run `npm run build` automatically and publish to `https://sturdynerdy.vercel.app/`.
+   - If you have a custom domain, point it to the Vercel deployment.
+
+## License
+This project is licensed under the **MIT License** – feel free to use, modify, and distribute.
 
 ---
-
-## 5. Vercel Deployment
-
-1. Initialize git and commit:
-   ```bash
-   git init
-   git add .
-   git commit -m "feat: initial SturdyNerdy release"
-   git branch -M main
-   git remote add origin <your-github-repo-url>
-   git push -u origin main
-   ```
-2. In the [Vercel Dashboard](https://vercel.com/new), import the repository.
-3. Keep default settings:
-   - Framework: **Next.js**
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-4. Under **Environment Variables**, add `GEMINI_API_KEY`.
-5. Click **Deploy**. Your application will be live in ~45 seconds.
+*Built with ❤️ for the 2026 Hackathon.*
